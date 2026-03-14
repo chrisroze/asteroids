@@ -10,6 +10,7 @@ class Player(CircleShape):
         self.rotation = 0
         self.shot_timer = 0  # Cooldown timer for shooting, in seconds
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
+        self.stage = 1
 
     def triangle(self):
         # Isosceles triangle centered on player position, sized by radius
@@ -57,9 +58,17 @@ class Player(CircleShape):
         if self.shot_timer > 0:
             self.shot_timer -= dt
             return  # Still in cooldown, cannot shoot
+
         shot = Shot(self.position.x, self.position.y)
         angle = math.radians(self.rotation)
-        shot.velocity = PLAYER_SHOOT_SPEED * pygame.Vector2(math.sin(angle), -math.cos(angle))
+        forward_velocity = PLAYER_SHOOT_SPEED * pygame.Vector2(math.sin(angle), -math.cos(angle))
+        shot.velocity = forward_velocity
+
+        # stage 4+ (score >= 800) spawns a backward shot too
+        if self.stage >= 4:
+            back_shot = Shot(self.position.x, self.position.y)
+            back_shot.velocity = -forward_velocity
+
         self.shot_timer = self.shoot_cooldown  # Reset cooldown timer
 
     def update(self, dt):

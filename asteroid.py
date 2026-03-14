@@ -45,23 +45,24 @@ class Asteroid(CircleShape):
 
     def split(self):
         self.kill()  # Remove the original asteroid
-        # Split asteroid into two smaller ones if it's above minimum size
+        # If asteroid is minimum size, it is fully destroyed
         if self.radius <= ASTEROID_MIN_RADIUS:
-            return []  # Too small to split, just destroy
-        
-        log_event("asteroid_split") # Log the split event
+            log_event("asteroid_destroyed")
+            return True
+
+        # Otherwise split into two smaller asteroids
+        log_event("asteroid_split")
         new_kind = max(1, self.kind - 1)
         new_radius = self.radius_for_kind(new_kind)
 
-        # Create two new asteroids with slightly different velocities
         angle = random.uniform(20, 50)  # Split angle between 20 and 50 degrees
         velocity1 = self.velocity.rotate(angle) * random.uniform(0.8, 1.2)
         velocity2 = self.velocity.rotate(-angle) * random.uniform(0.8, 1.2)
 
-        asteroid1 = Asteroid(self.position.x, self.position.y, radius=new_radius, kind=new_kind, velocity=velocity1)
-        asteroid2 = Asteroid(self.position.x, self.position.y, radius=new_radius, kind=new_kind, velocity=velocity2)
+        Asteroid(self.position.x, self.position.y, radius=new_radius, kind=new_kind, velocity=velocity1)
+        Asteroid(self.position.x, self.position.y, radius=new_radius, kind=new_kind, velocity=velocity2)
 
-        return
+        return False
 
 
     def update(self, dt):

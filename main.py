@@ -14,6 +14,7 @@ from logger import log_state, log_event
 from player import Player
 from asteroid import Asteroid
 from AsteroidField import AsteroidField
+from particle import Particle
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -49,6 +50,7 @@ def main():
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (asteroid_field, updatable)
     Shot.containers = (shots, updatable, drawable)
+    Particle.containers = (updatable, drawable)
 
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
     player.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
@@ -60,6 +62,7 @@ def main():
 
     # Create multiple asteroids in the field with random positions and velocities
     while True:
+
         log_state()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -83,15 +86,30 @@ def main():
             for shot in shots:
                 if shot.collide_with(asteroid):
                     log_event("asteroid_shot")
-                    asteroid.split()  # Split asteroid into smaller ones if it's above minimum size
+
+                    # Hit particle burst effect
+                    for _ in range(10):
+                        Particle(shot.position.x, shot.position.y)
+
+                    killed = asteroid.split()  # Split asteroid into smaller ones if it's above minimum size
                     shot.kill()  # Remove the shot
-                    score += 10  # Increment score for hitting an asteroid
+
+                    score += 10  # Base points per hit
+                    if killed:
+                        score += 5  # Bonus for complete destruction
+
+
 
         # Difficulty scaling: every 200 points
         level = score // 200
-        player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.1 * level)
-        asteroid_field.spawn_rate = max(0.5, ASTEROID_SPAWN_RATE_SECONDS - 0.3 * level)
-        stage = min(5, 1 + level)
+        stage = 1 + level
+        player.stage = stage
+        if stage < 4:  # Only increase difficulty up to stage 4, stage 5 is the special heavy mode
+            player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.1 * level)
+            asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.2 * level)
+        elif stage > 4: # For stage 5+ (score >= 800), make it even harder with faster shooting and more asteroids
+            player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.05 * level + 0.1)
+            asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.4 * level)
 
         # Update the display with the new positions of the player and asteroids and log the frame update event
         screen.fill((0, 0, 0))  # Clear the screen with black
