@@ -41,7 +41,7 @@ class Asteroid(CircleShape):
     def draw(self, screen):
         # Draw random brown asteroid shape and darker outline.
         pygame.draw.circle(screen, self.fill_color, self.position, self.radius)
-        pygame.draw.circle(screen, self.outline_color, self.position, self.radius, LINE_WIDTH)
+        pygame.draw.circle(screen, self.outline_color, self.position, self.radius, LINE_WIDTH + 3 ) 
 
     def split(self):
         self.kill()  # Remove the original asteroid
