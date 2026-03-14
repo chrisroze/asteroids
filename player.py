@@ -1,5 +1,6 @@
+from shot import Shot
 from circleshape import CircleShape
-from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_SPEED, PLAYER_TURN_SPEED
+from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_SPEED, PLAYER_TURN_SPEED
 import pygame
 import math
 
@@ -7,6 +8,7 @@ class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
+        self.shot_timer = 0  # Cooldown timer for shooting, in seconds
 
     def triangle(self):
         # Isosceles triangle centered on player position, sized by radius
@@ -40,6 +42,16 @@ class Player(CircleShape):
         direction = pygame.Vector2(math.sin(angle), -math.cos(angle))
         self.position += direction * PLAYER_SPEED * dt
 
+    def shoot(self,dt):
+        # Create a new shot object and set its velocity based on the player's current rotation
+            if self.shot_timer > 0:
+                self.shot_timer -= dt
+                return  # Still in cooldown, cannot shoot
+            shot = Shot(self.position.x, self.position.y)
+            angle = math.radians(self.rotation)
+            shot.velocity = PLAYER_SHOOT_SPEED * pygame.Vector2(math.sin(angle), -math.cos(angle))
+            self.shot_timer = PLAYER_SHOOT_COOLDOWN_SECONDS  # Reset cooldown timer
+
     def update(self, dt):
         # Handle player input for rotation. Left and right arrow keys rotate the player.
         keys = pygame.key.get_pressed()
@@ -55,3 +67,7 @@ class Player(CircleShape):
         
         if keys[pygame.K_DOWN]:
             self.move(-dt)
+
+#   Handle player input for shooting. Space bar creates a new shot object with velocity in the direction the player is facing.
+        if keys[pygame.K_SPACE]:
+            self.shoot(dt)

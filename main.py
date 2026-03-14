@@ -1,4 +1,14 @@
+#   Asteroids Game
+#   A simple implementation of the classic Asteroids game using Pygame.
+#   This code sets up the game window, initializes the player and asteroids, and handles
+#   the main game loop, including event handling, updating game objects, and rendering.
+#   The game features a player-controlled spaceship that can move and rotate, and a field of asteroids
+#   that the player must avoid. The game ends when the player collides with an asteroid.
+
+import sys
+import time
 import pygame
+from shot import Shot
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from logger import log_state, log_event
 from player import Player
@@ -11,21 +21,30 @@ pygame.display.set_caption("Asteroids")
 
 
 def main():
-    print("Starting Asteroids with pygame version: ", pygame.version.ver)
-    print(f"Screen width: {SCREEN_WIDTH}")
-    print(f"Screen height: {SCREEN_HEIGHT}")
+    # Log game start time and pygame version
+    start_time = time.time()
+    print("Starting Asteroids with pygame version:", pygame.version.ver)
+    print(f"Game start time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}")
+#    print(f"Screen width: {SCREEN_WIDTH}")
+#    print(f"Screen height: {SCREEN_HEIGHT}")
+
+    # Initialize pygame and set up the game window
     pygame.init()
+    dt = 0 
+
+    # Set up game objects and groups
     clock = pygame.time.Clock()
-    dt = 0
-    delta_rotation = 0  
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     asteroid_field = pygame.sprite.Group()
+    shots = pygame.sprite.Group()
 
+    # Set the containers for each class
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (asteroid_field, updatable)
+    Shot.containers = (shots, updatable, drawable)
 
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
     asteroid_field = AsteroidField()
@@ -33,7 +52,7 @@ def main():
     # ast2 = Asteroid(300, 200, 40, velocity=pygame.Vector2(-200, 200))
     
 
-
+    # Create multiple asteroids in the field with random positions and velocities
     while True:
         log_state()
         for event in pygame.event.get():
@@ -41,20 +60,37 @@ def main():
                 log_event("Game exited by user.")
                 pygame.quit()
                 return
-        # Update and draw player
+        # Update game objects
         updatable.update(dt)
 
-        #update the display
+        # Check for collisions between player and asteroids and log the event if it occurs and end the game 
+        for asteroid in asteroids:
+            if player.collide_with(asteroid):
+                log_event("player_hit")
+                print("Player collided with an asteroid! Game Over.")
+#                pygame.quit()
+                end_time = time.time()
+                elapsed = end_time - start_time
+                print(f"Game end time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))}")
+                print(f"Total runtime: {elapsed:.2f} seconds")
+                sys.exit()
+                return
+            for shot in shots:
+                if shot.collide_with(asteroid):
+                    log_event("asteroid_shot")
+                    asteroid.split()  # Split asteroid into smaller ones if it's above minimum size
+                    shot.kill()  # Remove the shot
+
+        #update the display with the new positions of the player and asteroids and log the frame update event 
         screen.fill((0, 0, 0))  # Clear the screen with black
-#        drawable.draw(screen)
         for obj in drawable:
             obj.draw(screen)  # Call the custom draw method for each object
-
         pygame.display.flip()  # Update the display
 
         # Limit to 60 frames per second and get delta time in seconds
         dt = clock.tick(60) / 1000.0  # Limit to 60 frames per second and get delta time in seconds
-        # print(f"Delta time (seconds): {dt:.4f}")
+        
+
 
 if __name__ == "__main__":
     main()
