@@ -16,8 +16,43 @@ from constants import (
 )
 import pygame
 import math
+import random
 
 class Player(CircleShape):
+    @staticmethod
+    def _luminance(color):
+        return (0.2126 * color[0]) + (0.7152 * color[1]) + (0.0722 * color[2])
+
+    @staticmethod
+    def _color_distance(color_a, color_b):
+        return math.sqrt(
+            (color_a[0] - color_b[0]) ** 2
+            + (color_a[1] - color_b[1]) ** 2
+            + (color_a[2] - color_b[2]) ** 2
+        )
+
+    @classmethod
+    def _random_bright_color(cls, min_luminance=170):
+        while True:
+            color = (
+                random.randint(90, 255),
+                random.randint(90, 255),
+                random.randint(90, 255),
+            )
+            if cls._luminance(color) >= min_luminance:
+                return color
+
+    @classmethod
+    def _random_player_colors(cls):
+        fill_color = cls._random_bright_color(min_luminance=165)
+
+        for _ in range(50):
+            outline_color = cls._random_bright_color(min_luminance=185)
+            if cls._color_distance(fill_color, outline_color) >= 120:
+                return fill_color, outline_color
+
+        return fill_color, (255, 255, 255)
+
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS * 0.8)  # Circle hitbox is smaller than visual triangle for better gameplay feel
         self.rotation = 0
@@ -26,6 +61,7 @@ class Player(CircleShape):
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.stage = 1
         self.thrusting = False
+        self.fill_color, self.outline_color = self._random_player_colors()
 
     def triangle(self):
         # Isosceles triangle centered on player position, sized by radius
@@ -60,9 +96,8 @@ class Player(CircleShape):
                 screen.blit(rotated, flame_rect)
 
         points = self.triangle()
-        # Draw solid blueish player shape and then outline with configured width.
-        pygame.draw.polygon(screen, (100, 150, 255), points)
-        pygame.draw.polygon(screen, (255, 255, 255), points, LINE_WIDTH )
+        pygame.draw.polygon(screen, self.fill_color, points)
+        pygame.draw.polygon(screen, self.outline_color, points, LINE_WIDTH)
 
     def rotate(self, dt):
         # Rotate player by configured turn speed. Rotation is in degrees
