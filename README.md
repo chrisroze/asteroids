@@ -7,7 +7,9 @@ Asteroids game in python with
 
 
 Control
-- up arrow
-- down arrow
-- right arrow
-- left arrow
+- up arrow      : forward
+- down arrow    : backward
+- right arrow   : turn right
+- left arrow    : turn left
+- space         : pause the game
+- escape        : quit game

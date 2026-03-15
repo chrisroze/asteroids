@@ -46,3 +46,46 @@ class Particle(CircleShape):
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
+
+
+class FloatingText(CircleShape):
+    font = None
+
+    @classmethod
+    def _ensure_font(cls):
+        if cls.font is None:
+            if not pygame.font.get_init():
+                pygame.font.init()
+            cls.font = pygame.font.SysFont(None, 28)
+        return cls.font
+
+    def __init__(self, x, y, text, color=(255, 255, 255), lifetime=1.2):
+        super().__init__(x, y, radius=0)
+        self.text = str(text)
+        self.base_color = color
+        self.lifetime = lifetime
+        self.age = 0.0
+        self.velocity = pygame.Vector2(0, -40)  # float up slowly
+        self.alpha = 255
+        self.font = self._ensure_font()
+        self._refresh_surface()
+
+    def _refresh_surface(self):
+        self.text_surface = self.font.render(self.text, True, self.base_color)
+        self.text_surface.set_alpha(self.alpha)
+
+    def update(self, dt):
+        self.age += dt
+        if self.age >= self.lifetime:
+            self.kill()
+            return
+
+        self.position += self.velocity * dt
+        fade = max(0.0, 1.0 - self.age / self.lifetime)
+        self.alpha = int(255 * fade)
+        self._refresh_surface()
+
+    def draw(self, screen):
+        if self.text_surface:
+            rect = self.text_surface.get_rect(center=(int(self.position.x), int(self.position.y)))
+            screen.blit(self.text_surface, rect)

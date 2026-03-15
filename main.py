@@ -14,7 +14,7 @@ from logger import log_state, log_event
 from player import Player
 from asteroid import Asteroid
 from AsteroidField import AsteroidField
-from particle import Particle
+from particle import Particle, FloatingText
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -49,6 +49,7 @@ def main():
     AsteroidField.containers = (asteroid_field, updatable)
     Shot.containers = (shots, updatable, drawable)
     Particle.containers = (updatable, drawable)
+    FloatingText.containers = (updatable, drawable)
 
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
     player.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
@@ -89,22 +90,26 @@ def main():
                         log_event("asteroid_shot")
                         for _ in range(10):
                             Particle(shot.position.x, shot.position.y)
-
-                        killed = asteroid.split()
+                        asteroid_killed = asteroid.split()
                         shot.kill()
-                        score += 10
-                        if killed:
-                            score += 5
+
+                        if asteroid_killed:
+                            score += 15
+                            FloatingText(asteroid.position.x, asteroid.position.y, "15", color=(255, 215, 0), lifetime=1.1)
+                        else:
+                            score += 10
+                            FloatingText(asteroid.position.x, asteroid.position.y, "10", color=(173, 216, 230), lifetime=1.1)
 
             level = score // 200
             stage = 1 + level
             if stage != current_stage:
                 current_stage = stage
+                player.stage = stage
+                asteroid_field.stage = stage
                 stage_message = f"Stage {stage}"
                 stage_message_timer = 1.5
                 log_event("stage_up")
 
-            player.stage = stage
             if stage < 4:
                 player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.1 * level)
                 asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.2 * level)
