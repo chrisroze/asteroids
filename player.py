@@ -1,3 +1,5 @@
+import sys
+
 from shot import Shot
 from circleshape import CircleShape
 from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_SPEED, PLAYER_TURN_SPEED, SCREEN_HEIGHT, SCREEN_WIDTH
@@ -86,6 +88,11 @@ class Player(CircleShape):
         
         if keys[pygame.K_DOWN]:
             self.move(-dt)
+
+        if keys[pygame.K_ESCAPE]:
+            print("Game exited by user.")
+            pygame.quit()
+            sys.exit()
 
 #   Handle player input for shooting. Space bar creates a new shot object with velocity in the direction the player is facing.
         # if keys[pygame.K_SPACE]:
