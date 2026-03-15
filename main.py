@@ -7,6 +7,7 @@
 
 import sys
 import time
+import random
 import pygame
 from shot import Shot
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PLAYER_SHOOT_COOLDOWN_SECONDS, ASTEROID_SPAWN_RATE_SECONDS
@@ -43,6 +44,23 @@ def main():
     stage_message = ""
     stage_message_timer = 0.0
     current_stage = 1
+
+    star_count = 180
+    star_colors = [
+        (255, 255, 255),
+        (220, 235, 255),
+        (255, 245, 210),
+        (200, 220, 255),
+    ]
+    stars = [
+        (
+            random.randint(0, SCREEN_WIDTH - 1),
+            random.randint(0, SCREEN_HEIGHT - 1),
+            random.choice([1, 1, 1, 2, 2, 3]),
+            random.choice(star_colors),
+        )
+        for _ in range(star_count)
+    ]
 
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
@@ -118,7 +136,7 @@ def main():
                 player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.1 * level)
                 asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.2 * level)
             else:
-                player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.05 * level + 0.1)
+                player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.05 * level + 0.05)
                 asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.4 * level)
         else:
             level = score // 200
@@ -129,6 +147,9 @@ def main():
             stage_message_timer = max(0.0, stage_message_timer - dt)
 
         screen.fill((0, 0, 0))
+        for x, y, radius, color in stars:
+            pygame.draw.circle(screen, color, (x, y), radius)
+
         for obj in drawable:
             obj.draw(screen)
 

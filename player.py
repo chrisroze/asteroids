@@ -25,6 +25,7 @@ class Player(CircleShape):
         self.shot_timer = 0  # Cooldown timer for shooting, in seconds
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.stage = 1
+        self.thrusting = False
 
     def triangle(self):
         # Isosceles triangle centered on player position, sized by radius
@@ -43,6 +44,21 @@ class Player(CircleShape):
         # Circle hitbox exists in physics state (self.position and self.radius),
         # but it is intentionally not drawn. This keeps collision logic separate
         # from visual representation.
+        if self.thrusting:
+            angle = math.radians(self.rotation)
+            forward = pygame.Vector2(math.sin(angle), -math.cos(angle))
+            right = pygame.Vector2(-forward.y, forward.x)
+            flame_base = self.position - forward * (self.radius * 0.5)
+            flame_offset = self.radius * 0.3
+
+            for side in (-1, 1):
+                center = flame_base + right * flame_offset * side
+                flame_surface = pygame.Surface((12, 8), pygame.SRCALPHA)
+                pygame.draw.ellipse(flame_surface, (255, 140, 40), flame_surface.get_rect())
+                rotated = pygame.transform.rotate(flame_surface, -self.rotation)
+                flame_rect = rotated.get_rect(center=(center.x, center.y))
+                screen.blit(rotated, flame_rect)
+
         points = self.triangle()
         # Draw solid blueish player shape and then outline with configured width.
         pygame.draw.polygon(screen, (100, 150, 255), points)
@@ -98,6 +114,7 @@ class Player(CircleShape):
             self.rotate(+dt)
 
         # Up arrow applies thrust up to max speed. Releasing it decelerates gradually.
+        self.thrusting = keys[pygame.K_UP]
         if keys[pygame.K_UP]:
             self.velocity += direction * PLAYER_ACCELERATION * dt
             if self.velocity.length_squared() > PLAYER_SPEED * PLAYER_SPEED:
@@ -112,7 +129,7 @@ class Player(CircleShape):
                     self.velocity.scale_to_length(speed)
 
         if keys[pygame.K_DOWN]:
-            self.position += (-direction) * (PLAYER_SPEED * 0.25) * dt
+            self.position += (-direction) * (PLAYER_SPEED * 0.5) * dt
 
         self._apply_movement(dt)
 
