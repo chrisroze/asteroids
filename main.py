@@ -51,6 +51,21 @@ def main():
         for _ in range(star_count)
     ]
 
+    title_letters = list("ASTEROIDS")
+    title_letter_surfaces = [
+        title_font.render(
+            letter,
+            True,
+            (
+                random.randint(70, 255),
+                random.randint(70, 255),
+                random.randint(70, 255),
+            ),
+        )
+        for letter in title_letters
+    ]
+    title_total_width = sum(surface.get_width() for surface in title_letter_surfaces)
+
     show_title_screen = True
     while show_title_screen:
         for event in pygame.event.get():
@@ -71,9 +86,11 @@ def main():
         for x, y, radius, color in stars:
             pygame.draw.circle(screen, color, (x, y), radius)
 
-        title_surface = title_font.render("Asteroids", True, (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 80))
-        screen.blit(title_surface, title_rect)
+        current_x = (SCREEN_WIDTH - title_total_width) / 2
+        title_y = (SCREEN_HEIGHT / 2) - 80
+        for letter_surface in title_letter_surfaces:
+            screen.blit(letter_surface, (current_x, title_y))
+            current_x += letter_surface.get_width()
 
         enter_surface = title_hint_font.render("Press Enter to Play", True, (255, 255, 255))
         enter_rect = enter_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 15))
@@ -192,12 +209,14 @@ def main():
                     stage_message_timer = 1.5
                     log_event("stage_up")
 
+
+#   Adjust difficulty by modifying player shoot cooldown and asteroid spawn rate based on the current stage.
                 if stage < 4:
                     player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.1 * level)
                     asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.2 * level)
                 else:
                     player.shoot_cooldown = max(0.1, PLAYER_SHOOT_COOLDOWN_SECONDS - 0.05 * level + 0.05)
-                    asteroid_field.spawn_rate = max(0.1, ASTEROID_SPAWN_RATE_SECONDS - 0.4 * level)
+                    asteroid_field.spawn_rate = max(0.3, ASTEROID_SPAWN_RATE_SECONDS - 0.3 * level)
             else:
                 level = score // 200
                 stage = 1 + level

@@ -22,7 +22,7 @@ class Player(CircleShape):
     @staticmethod
     def _luminance(color):
         return (0.2126 * color[0]) + (0.7152 * color[1]) + (0.0722 * color[2])
-
+# Calculate the distance between two colors in RGB space
     @staticmethod
     def _color_distance(color_a, color_b):
         return math.sqrt(
@@ -30,18 +30,19 @@ class Player(CircleShape):
             + (color_a[1] - color_b[1]) ** 2
             + (color_a[2] - color_b[2]) ** 2
         )
-
+# Generate a random bright color with a minimum luminance threshold 
     @classmethod
     def _random_bright_color(cls, min_luminance=170):
         while True:
             color = (
-                random.randint(90, 255),
-                random.randint(90, 255),
-                random.randint(90, 255),
+                random.randint(70, 255),
+                random.randint(70, 255),
+                random.randint(70, 255),
             )
             if cls._luminance(color) >= min_luminance:
                 return color
-
+# Generate a random fill color and an outline color that is sufficiently different in brightness 
+# to ensure good visibility. If a suitable outline color cannot be found after 50 attempts, default to white.
     @classmethod
     def _random_player_colors(cls):
         fill_color = cls._random_bright_color(min_luminance=165)
@@ -54,7 +55,7 @@ class Player(CircleShape):
         return fill_color, (255, 255, 255)
 
     def __init__(self, x, y):
-        super().__init__(x, y, PLAYER_RADIUS * 0.8)  # Circle hitbox is smaller than visual triangle for better gameplay feel
+        super().__init__(x, y, PLAYER_RADIUS * 0.6)  # Circle hitbox is smaller than visual triangle for better gameplay feel
         self.rotation = 0
         self.velocity = pygame.Vector2(0, 0)
         self.shot_timer = 0  # Cooldown timer for shooting, in seconds
@@ -134,6 +135,13 @@ class Player(CircleShape):
             back_shot = Shot(self.position.x, self.position.y)
             back_shot.velocity = -forward_velocity
 
+        # stage 10+ adds a forward spread shot at +/- 30 degrees
+        if self.stage >= 10:
+            left_shot = Shot(self.position.x, self.position.y)
+            right_shot = Shot(self.position.x, self.position.y)
+            left_shot.velocity = forward_velocity.rotate(-30)
+            right_shot.velocity = forward_velocity.rotate(30)
+
         self.shot_timer = self.shoot_cooldown  # Reset cooldown timer
 
     def update(self, dt):
@@ -172,7 +180,7 @@ class Player(CircleShape):
             print("Game exited by user.")
             pygame.quit()
             sys.exit()
-
-#   Handle player input for shooting. Space bar creates a new shot object with velocity in the direction the player is facing.
-        # if keys[pygame.K_SPACE]:
+# Auto shooting makes the game more engaging and allows players to focus on movement and dodging, 
+# especially in later stages with more asteroids. It also adds a sense of power and progression 
+# as the player advances through stages and can shoot more effectively.
         self.shoot(dt)
