@@ -67,6 +67,10 @@ def main():
                 log_event("Game exited by user.")
                 pygame.quit()
                 return
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                log_event("Game exited by user.")
+                pygame.quit()
+                return
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 paused = not paused
                 log_event("pause_toggled")
@@ -128,26 +132,26 @@ def main():
         for obj in drawable:
             obj.draw(screen)
 
+        stage_text = f"Stage: {stage}"
+        title_text = f"Score: {score}"
+        asteroid_count_text = f"Asteroids: {len(asteroids)}"
+
+        stage_surface = font.render(stage_text, True, (255, 255, 255))
+        stage_rect = stage_surface.get_rect(midtop=(SCREEN_WIDTH / 2, 10))
+        screen.blit(stage_surface, stage_rect)
+
+        title_surface = font.render(title_text, True, (255, 255, 255))
+        title_rect = title_surface.get_rect(midtop=(SCREEN_WIDTH / 2, stage_rect.bottom + 5))
+        screen.blit(title_surface, title_rect)
+
+        count_surface = font.render(asteroid_count_text, True, (255, 255, 255))
+        count_rect = count_surface.get_rect(midtop=(SCREEN_WIDTH / 2, title_rect.bottom + 5))
+        screen.blit(count_surface, count_rect)
+
         if paused:
             paused_surface = pause_font.render("Paused", True, (255, 0, 0))
             paused_rect = paused_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
             screen.blit(paused_surface, paused_rect)
-        else:
-            stage_text = f"Stage: {stage}"
-            title_text = f"Score: {score}"
-            asteroid_count_text = f"Asteroids: {len(asteroids)}"
-
-            stage_surface = font.render(stage_text, True, (255, 255, 255))
-            stage_rect = stage_surface.get_rect(midtop=(SCREEN_WIDTH / 2, 10))
-            screen.blit(stage_surface, stage_rect)
-
-            title_surface = font.render(title_text, True, (255, 255, 255))
-            title_rect = title_surface.get_rect(midtop=(SCREEN_WIDTH / 2, stage_rect.bottom + 5))
-            screen.blit(title_surface, title_rect)
-
-            count_surface = font.render(asteroid_count_text, True, (255, 255, 255))
-            count_rect = count_surface.get_rect(midtop=(SCREEN_WIDTH / 2, title_rect.bottom + 5))
-            screen.blit(count_surface, count_rect)
 
         if stage_message_timer > 0 and stage_message:
             alpha = int(255 * (stage_message_timer / 1.5))

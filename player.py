@@ -2,7 +2,18 @@ import sys
 
 from shot import Shot
 from circleshape import CircleShape
-from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_SHOOT_COOLDOWN_SECONDS, PLAYER_SHOOT_SPEED, PLAYER_SPEED, PLAYER_TURN_SPEED, SCREEN_HEIGHT, SCREEN_WIDTH
+from constants import (
+    PLAYER_RADIUS,
+    LINE_WIDTH,
+    PLAYER_SHOOT_COOLDOWN_SECONDS,
+    PLAYER_SHOOT_SPEED,
+    PLAYER_SPEED,
+    PLAYER_TURN_SPEED,
+    PLAYER_ACCELERATION,
+    PLAYER_DECELERATION,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+)
 import pygame
 import math
 
@@ -10,6 +21,7 @@ class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS * 0.8)  # Circle hitbox is smaller than visual triangle for better gameplay feel
         self.rotation = 0
+        self.velocity = pygame.Vector2(0, 0)
         self.shot_timer = 0  # Cooldown timer for shooting, in seconds
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
         self.stage = 1
@@ -40,11 +52,7 @@ class Player(CircleShape):
         # Rotate player by configured turn speed. Rotation is in degrees
         self.rotation += PLAYER_TURN_SPEED * dt 
 
-    def move(self, dt):
-        # Move player forward in the direction they are currently facing.
-        angle = math.radians(self.rotation)
-        direction = pygame.Vector2(math.sin(angle), -math.cos(angle))
-        self.position += direction * PLAYER_SPEED * dt
+    def _wrap_position(self):
         # Wrap around screen edges        
         if self.position.x < 0:
             self.position.x += SCREEN_WIDTH
@@ -54,6 +62,10 @@ class Player(CircleShape):
             self.position.y += SCREEN_HEIGHT
         elif self.position.y > SCREEN_HEIGHT:
             self.position.y -= SCREEN_HEIGHT 
+
+    def _apply_movement(self, dt):
+        self.position += self.velocity * dt
+        self._wrap_position()
 
     def shoot(self, dt):
         # Create a new shot object and set its velocity based on the player's current rotation
@@ -76,18 +88,33 @@ class Player(CircleShape):
     def update(self, dt):
         # Handle player input for rotation. Left and right arrow keys rotate the player.
         keys = pygame.key.get_pressed()
+        angle = math.radians(self.rotation)
+        direction = pygame.Vector2(math.sin(angle), -math.cos(angle))
+
         if keys[pygame.K_LEFT]:
             self.rotate(-dt)
 
         if keys[pygame.K_RIGHT]:
             self.rotate(+dt)
 
-        # Handle player input for movement. Up arrow moves forward, down arrow moves backward.
+        # Up arrow applies thrust up to max speed. Releasing it decelerates gradually.
         if keys[pygame.K_UP]:
-            self.move(+dt)   
-        
+            self.velocity += direction * PLAYER_ACCELERATION * dt
+            if self.velocity.length_squared() > PLAYER_SPEED * PLAYER_SPEED:
+                self.velocity.scale_to_length(PLAYER_SPEED)
+        else:
+            speed = self.velocity.length()
+            if speed > 0:
+                speed = max(0.0, speed - PLAYER_DECELERATION * dt)
+                if speed == 0:
+                    self.velocity = pygame.Vector2(0, 0)
+                else:
+                    self.velocity.scale_to_length(speed)
+
         if keys[pygame.K_DOWN]:
-            self.move(-dt)
+            self.position += (-direction) * (PLAYER_SPEED * 0.25) * dt
+
+        self._apply_movement(dt)
 
         if keys[pygame.K_ESCAPE]:
             print("Game exited by user.")

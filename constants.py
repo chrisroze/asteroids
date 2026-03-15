@@ -10,6 +10,8 @@ PLAYER_RADIUS = 20 # Radius of the player's circular hitbox
 LINE_WIDTH = 2 # Thickness of lines for drawing shapes
 PLAYER_TURN_SPEED = 300  # Degrees per second
 PLAYER_SPEED = 200  # Pixels per second
+PLAYER_ACCELERATION = 500  # Pixels per second squared
+PLAYER_DECELERATION = 120  # Pixels per second squared
 
 # Asteroid properties
 ASTEROID_MIN_RADIUS = 20
